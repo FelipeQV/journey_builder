@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Journey Builder</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',system-ui,sans-serif;background:#f5f4f0;color:#1a1a18;min-height:100vh}
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap');
+.app{display:grid;grid-template-rows:52px 1fr;min-height:100vh}
+header{background:#1a1a18;display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100}
+.logo{color:#fff;font-size:13px;font-weight:500;letter-spacing:.04em}
+.logo span{color:#b8e04a}
+.badge{font-size:11px;background:#2e2e2b;color:#888;padding:3px 10px;border-radius:20px}
+main{display:grid;grid-template-columns:360px 1fr;height:calc(100vh - 52px);overflow:hidden}
+.panel-left{background:#fff;border-right:1px solid #e8e6e0;display:flex;flex-direction:column;overflow-y:auto}
+.panel-section{padding:16px 20px 0}
+.p-label{font-size:11px;font-weight:600;letter-spacing:.08em;color:#888;text-transform:uppercase;display:block;margin-bottom:6px}
+textarea{width:100%;resize:none;border:1px solid #e8e6e0;border-radius:8px;padding:10px 12px;font-size:13px;font-family:inherit;color:#1a1a18;background:#fafaf8;line-height:1.6;transition:border-color .15s}
+textarea:focus{outline:none;border-color:#b8e04a;background:#fff}
+textarea::placeholder{color:#bbb}
+input[type=password]{width:100%;border:1px solid #e8e6e0;border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;color:#1a1a18;background:#fafaf8;transition:border-color .15s}
+input[type=password]:focus{outline:none;border-color:#b8e04a;background:#fff}
+.input-grow{flex:1;display:flex;flex-direction:column;padding:12px 20px;min-height:160px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;border:none;width:100%;font-family:inherit}
+.btn-primary{background:#1a1a18;color:#fff}
+.btn-primary:hover{background:#2e2e2b}
+.btn-secondary{background:transparent;color:#555;border:1px solid #e8e6e0}
+.btn-secondary:hover{background:#f5f4f0}
+.divider{height:1px;background:#e8e6e0;margin:0 20px}
+.actions-row{display:flex;gap:8px;padding:14px 20px;border-top:1px solid #e8e6e0}
+.annotations-panel{padding:14px 20px;border-top:1px solid #e8e6e0}
+.annotation-item{margin-bottom:14px}
+.ann-title-input{font-size:12px;font-weight:600;color:#1a1a18;border:none;border-bottom:1px solid #e8e6e0;width:100%;background:transparent;font-family:inherit;padding:2px 0 4px;margin-bottom:4px}
+.ann-title-input:focus{outline:none;border-bottom-color:#b8e04a}
+.ann-desc-input{font-size:11px;color:#555;border:none;width:100%;background:transparent;font-family:inherit;padding:2px 0;resize:none;line-height:1.5}
+.ann-desc-input:focus{outline:none}
+.loading-state{display:none;align-items:center;gap:10px;padding:10px 20px;font-size:13px;color:#888}
+.loading-state.active{display:flex}
+.spinner{width:16px;height:16px;border:2px solid #e8e6e0;border-top-color:#b8e04a;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-msg{font-size:12px;color:#c0392b;background:#fdf2f2;border:1px solid #f5c6cb;border-radius:6px;padding:8px 12px;margin:4px 20px 0;display:none}
+.error-msg.active{display:block}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:#aaa;text-align:center}
+.empty-icon{font-size:36px;opacity:.4}
+.empty-state p{font-size:13px;max-width:260px;line-height:1.6}
+.panel-right{overflow:auto;padding:28px;background:#f5f4f0;display:flex;flex-direction:column;align-items:center;gap:20px}
+
+/* Journey canvas */
+.journey-canvas{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);width:100%;overflow-x:auto;font-family:'DM Sans',system-ui,sans-serif}
+.journey-inner{min-width:max-content}
+.journey-header{padding:18px 20px 14px 130px;border-bottom:1px solid #e8e6e0;display:flex;align-items:baseline;gap:16px}
+.journey-title{font-size:15px;font-weight:600;color:#1a1a18}
+.journey-meta{font-size:12px;color:#aaa}
+
+/* Table layout — dots + lanes share same column widths */
+.journey-table{display:table;border-collapse:collapse}
+.j-row{display:table-row}
+.j-label{display:table-cell;width:130px;min-width:130px;padding:10px 12px 10px 20px;font-size:11px;font-weight:700;color:#1a1a18;letter-spacing:.03em;border-bottom:1px solid #f0eeea;vertical-align:middle;background:#fafaf8;position:sticky;left:0;z-index:2;box-shadow:1px 0 0 #e8e6e0}
+.j-label.dot-label-cell{border-bottom:2px solid #e8e6e0;background:#fff;color:transparent;font-size:0}
+.j-cells{display:table-cell;border-bottom:1px solid #f0eeea;vertical-align:top}
+.j-cells.dot-cells-wrap{border-bottom:2px solid #e8e6e0;vertical-align:middle;background:#fff}
+.cells-row{display:flex}
+
+/* Lane cell */
+.j-cell{width:200px;min-width:200px;max-width:200px;padding:14px 12px;border-right:1px solid #f0eeea;font-size:12px;color:#333;line-height:1.6;min-height:52px}
+.j-cell:last-child{border-right:none}
+
+/* Dot cell — same width as j-cell */
+.dot-cell{width:200px;min-width:200px;max-width:200px;display:flex;flex-direction:column;align-items:center;padding:16px 12px 12px;position:relative}
+.dot-cell::before{content:'';position:absolute;top:22px;left:0;right:0;height:1.5px;background:#e0deda;z-index:0}
+.dot-cell:first-child::before{left:50%}
+.dot-cell:last-child::before{right:50%}
+.dot{width:11px;height:11px;border-radius:50%;background:#1a1a18;border:2px solid #fff;box-shadow:0 0 0 1.5px #1a1a18;position:relative;z-index:1;flex-shrink:0}
+.dot-step-label{font-size:10px;color:#555;margin-top:8px;text-align:center;max-width:170px;line-height:1.4;font-weight:500}
+
+/* Chips */
+.tp-chip{display:inline-block;background:#f0eeea;border-radius:4px;padding:2px 7px;font-size:11px;color:#555;font-weight:500;margin:2px 2px 2px 0}
+.tech-chip{display:inline-flex;align-items:center;background:#1a1a18;border-radius:4px;padding:3px 7px;font-size:11px;color:#fff;font-weight:500;margin:2px 2px 2px 0}
+.tech-chip.hl{background:#b8e04a;color:#1a1a18}
+.op-path{margin-bottom:7px}
+.op-lbl{font-size:10px;font-weight:700;color:#1a1a18;margin-bottom:2px}
+.op-exc .op-lbl{color:#c0392b}
+.op-actors{margin-top:7px;border-top:1px dashed #eee;padding-top:7px}
+.actor-row{display:flex;gap:6px;margin-bottom:4px;font-size:11px}
+.actor-name{font-weight:600;color:#1a1a18;min-width:70px;flex-shrink:0}
+.actor-caps li{margin-left:12px;color:#555}
+
+/* Bottom annotation bar */
+.ann-bar{display:table;border-collapse:collapse;border-top:2px solid #1a1a18}
+.ann-bar-row{display:table-row}
+.ann-bar-spacer{display:table-cell;width:130px;min-width:130px;background:#fafaf8;border-right:1px solid #e8e6e0}
+.ann-bar-cells{display:table-cell}
+.ann-bar-inner{display:flex}
+.ann-block{flex:1;padding:14px 14px;border-right:1px solid #f0eeea}
+.ann-block:last-child{border-right:none}
+.ann-tag{font-size:9px;font-weight:700;letter-spacing:.1em;color:#b8e04a;text-transform:uppercase;margin-bottom:5px}
+.ann-title{font-size:12px;font-weight:700;color:#1a1a18;margin-bottom:4px}
+.ann-desc{font-size:11px;color:#666;line-height:1.6}
+
+/* Wrap + export */
+#journey-output-wrap{width:100%;max-width:1200px;display:flex;flex-direction:column;gap:10px}
+.export-row{display:flex;justify-content:flex-end}
+.export-btn{font-size:12px;padding:7px 16px;border-radius:6px;border:1px solid #ddd;background:#fff;cursor:pointer;color:#555;font-family:inherit;transition:all .1s}
+.export-btn:hover{background:#1a1a18;color:#fff;border-color:#1a1a18}
+
+/* API key */
+.apikey-section{padding:14px 20px;border-bottom:1px solid #e8e6e0}
+.apikey-row{display:flex;gap:6px;align-items:center;margin-top:6px}
+.apikey-row input{flex:1}
+.key-status{font-size:11px;margin-top:5px}
+.key-status.ok{color:#27ae60}
+.key-status.missing{color:#e67e22}
+
+
+@media print{
+  @page{size:A3 landscape;margin:8mm}
+  header,.panel-left,.export-row,.actions-row,.annotations-panel{display:none !important}
+  .app{display:block !important}
+  main{display:block !important;width:100% !important}
+  .panel-right{display:block !important;width:100% !important;height:auto !important;overflow:visible !important;padding:4px !important;background:#fff !important}
+  #journey-output-wrap{max-width:100% !important;width:100% !important}
+  .journey-canvas{box-shadow:none !important;border:1px solid #ddd !important;width:100% !important;max-width:100% !important;overflow:visible !important}
+  .journey-inner{min-width:unset !important;width:100% !important}
+  .journey-table,.ann-bar{width:100% !important;table-layout:fixed !important}
+  .j-label,.ann-bar-spacer{width:90px !important;min-width:90px !important;font-size:8px !important;padding:5px 4px 5px 8px !important;position:static !important;box-shadow:none !important}
+  .j-cell,.dot-cell{width:auto !important;min-width:0 !important;max-width:none !important;flex:1 !important;font-size:8px !important;padding:5px 4px !important;word-break:break-word !important}
+  .dot-step-label{font-size:7px !important;max-width:none !important}
+  .tp-chip,.tech-chip{font-size:7px !important;padding:1px 3px !important}
+  .op-lbl{font-size:7px !important}
+  .ann-block{padding:6px 5px !important}
+  .ann-title{font-size:8px !important}
+  .ann-desc{font-size:7px !important}
+  .journey-header{padding-left:90px !important}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <span class="logo">Journey <span>Builder</span></span>
+    <span class="badge">Chaos Thinkers</span>
+  </header>
+  <main>
+    <div class="panel-left">
+
+      <div class="apikey-section">
+        <span class="p-label">API Key</span>
+        <div class="apikey-row">
+          <input type="password" id="api-key-input" placeholder="sk-ant-...">
+          <button class="btn btn-secondary" style="width:auto;padding:9px 14px;font-size:12px" onclick="saveKey()">Save</button>
+        </div>
+        <div class="key-status missing" id="key-status">No key — required for extraction</div>
+      </div>
+
+      <div class="panel-section">
+        <span class="p-label" style="margin-top:4px">Raw input</span>
+      </div>
+      <div class="input-grow">
+        <textarea id="raw-input" placeholder="Paste transcript, brief, process description, or notes..." rows="10"></textarea>
+      </div>
+      <div style="padding:0 20px 14px">
+        <button class="btn btn-primary" id="extract-btn" onclick="extractJourney()">↗ Extract journey</button>
+        <div class="loading-state" id="loading"><div class="spinner"></div><span id="loading-msg">Analyzing...</span></div>
+        <div class="error-msg" id="error-msg"></div>
+      </div>
+
+
+      <div class="annotations-panel" id="annotations-panel" style="display:none">
+        <span class="p-label">Strategic framing</span>
+        <div id="annotations-editor"></div>
+      </div>
+
+      <div class="actions-row" id="actions-row" style="display:none">
+        <button class="btn btn-secondary" onclick="clearAll()" style="flex:1">Clear</button>
+        <button class="btn btn-primary" onclick="applyAnnotations()" style="flex:1">Update</button>
+      </div>
+    </div>
+
+    <div class="panel-right" id="canvas-area">
+      <div class="empty-state" id="empty-state">
+        <div class="empty-icon">⬡</div>
+        <p>Set your API key and extract — or paste a JSON and load directly.</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+let currentJourney = null;
+
+function saveKey() {
+  const v = document.getElementById('api-key-input').value.trim();
+  if (!v) return;
+  sessionStorage.setItem('uj_key', v);
+  document.getElementById('key-status').textContent = 'Key saved for this session';
+  document.getElementById('key-status').className = 'key-status ok';
+}
+function getKey() { return sessionStorage.getItem('uj_key') || document.getElementById('api-key-input').value.trim(); }
+window.addEventListener('DOMContentLoaded', () => {
+  const k = sessionStorage.getItem('uj_key');
+  if (k) { document.getElementById('api-key-input').value = k; document.getElementById('key-status').textContent = 'Key loaded'; document.getElementById('key-status').className = 'key-status ok'; }
+  setTimeout(() => loadJourney(PRELOADED), 120);
+});
+
+const LM = ['Reading input...','Identifying steps...','Structuring lanes...','Building annotations...'];
+function setLoading(on) {
+  document.getElementById('extract-btn').style.display = on ? 'none' : 'flex';
+  document.getElementById('loading').classList.toggle('active', on);
+  if (on) { let i=0; window._li=setInterval(()=>{ document.getElementById('loading-msg').textContent=LM[i++%LM.length]; },1400); }
+  else clearInterval(window._li);
+}
+function showError(msg) { const e=document.getElementById('error-msg'); e.textContent=msg; e.classList.add('active'); setTimeout(()=>e.classList.remove('active'),7000); }
+
+async function extractJourney() {
+  const input = document.getElementById('raw-input').value.trim();
+  if (!input) return showError('Paste some input first.');
+  const key = getKey();
+  if (!key) return showError('Set your API key first.');
+  setLoading(true);
+  const sys = `You are a service design expert. Extract a user journey and return ONLY valid JSON — no markdown, no backticks, no preamble.
+
+Schema:
+{
+  "title": "Short journey title",
+  "persona": "Who the user is (1 sentence)",
+  "steps": [
+    {
+      "id": "step_1",
+      "label": "Step name (3-5 words)",
+      "journey_narrative": "What the user does (max 15 words)",
+      "touchpoint": ["Channel or interface"],
+      "data": "Data captured (max 10 words, null if none)",
+      "operation": {
+        "happy_path": "Ideal flow (max 12 words, null if unknown)",
+        "exception": "Failure mode (max 12 words, null if unknown)",
+        "actors": [{ "name": "Actor", "capabilities": ["What they do (max 6 words)"] }]
+      },
+      "tech_enablers": [{ "name": "System name", "highlighted": true }]
+    }
+  ],
+  "annotations": [
+    { "section": "customer_journey", "title": "3-5 word title", "description": "Max 20 words" },
+    { "section": "operation", "title": "3-5 word title", "description": "Max 20 words" },
+    { "section": "technology", "title": "3-5 word title", "description": "Max 20 words" }
+  ]
+}
+
+Rules:
+- Extract as many steps as the input requires
+- Keep all text SHORT
+- highlighted: true on the most critical tech per step
+- Return ONLY the raw JSON object`;
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 4000, system: sys, messages: [{ role: 'user', content: input }] })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || 'API error');
+    const text = data.content.map(b => b.text||'').join('');
+    loadJourney(JSON.parse(text.replace(/```json|```/g,'').trim()));
+  } catch(err) { showError('Extraction failed: ' + err.message); console.error(err); }
+  finally { setLoading(false); }
+}
+
+
+function loadJourney(j) {
+  currentJourney = j;
+  renderJourney(j);
+  renderAnnotationsEditor(j.annotations);
+  document.getElementById('annotations-panel').style.display = 'block';
+  document.getElementById('actions-row').style.display = 'flex';
+  const es = document.getElementById('empty-state');
+  if (es) es.style.display = 'none';
+}
+
+function renderAnnotationsEditor(anns) {
+  if (!anns) return;
+  const c = document.getElementById('annotations-editor');
+  c.innerHTML = '';
+  anns.forEach((a, i) => {
+    const d = document.createElement('div');
+    d.className = 'annotation-item';
+    d.innerHTML = `<span class="p-label" style="font-size:10px;color:#aaa">${sectionLabel(a.section)}</span>
+      <input class="ann-title-input" data-idx="${i}" value="${esc(a.title||'')}" placeholder="Strategic title">
+      <textarea class="ann-desc-input" data-idx="${i}" rows="2" placeholder="Description">${esc(a.description||'')}</textarea>`;
+    c.appendChild(d);
+  });
+}
+
+function sectionLabel(s) { return {customer_journey:'Customer journey',operation:'Operations',technology:'Technology enablers'}[s]||s; }
+
+function applyAnnotations() {
+  if (!currentJourney) return;
+  document.querySelectorAll('.ann-title-input').forEach(el => { currentJourney.annotations[+el.dataset.idx].title = el.value; });
+  document.querySelectorAll('.ann-desc-input').forEach(el => { currentJourney.annotations[+el.dataset.idx].description = el.value; });
+  renderJourney(currentJourney);
+}
+
+function clearAll() {
+  currentJourney = null;
+  document.getElementById('raw-input').value = '';
+  document.getElementById('annotations-panel').style.display = 'none';
+  document.getElementById('actions-row').style.display = 'none';
+  document.getElementById('extract-btn').style.display = 'flex';
+  document.getElementById('canvas-area').innerHTML = '<div class="empty-state" id="empty-state"><div class="empty-icon">⬡</div><p>Set your API key and extract — or paste a JSON and load directly.</p></div>';
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function renderJourney(j) {
+  const annMap = {};
+  (j.annotations||[]).forEach(a => { annMap[a.section] = a; });
+
+  const dotCells = j.steps.map(s => `
+    <div class="dot-cell">
+      <div class="dot"></div>
+      <div class="dot-step-label">${esc(s.label)}</div>
+    </div>`).join('');
+
+  function laneRow(label, cells, noBorder) {
+    return `<div class="j-row">
+      <div class="j-label"${noBorder?' style="border-bottom:none"':''}>${label}</div>
+      <div class="j-cells"${noBorder?' style="border-bottom:none"':''}><div class="cells-row">${cells}</div></div>
+    </div>`;
+  }
+
+  const jCells = j.steps.map(s => `<div class="j-cell">${s.journey_narrative?esc(s.journey_narrative):'<span style="color:#ccc">—</span>'}</div>`).join('');
+  const tpCells = j.steps.map(s => `<div class="j-cell">${(s.touchpoint||[]).map(t=>`<span class="tp-chip">${esc(t)}</span>`).join('')||'<span style="color:#ccc">—</span>'}</div>`).join('');
+  const dCells = j.steps.map(s => `<div class="j-cell" style="font-size:11px;color:#666">${s.data?esc(s.data):'<span style="color:#ccc">—</span>'}</div>`).join('');
+
+  const opCells = j.steps.map(s => {
+    const op = s.operation||{}; let h='';
+    if (op.happy_path) h += `<div class="op-path"><div class="op-lbl">✓ Happy path</div>${esc(op.happy_path)}</div>`;
+    if (op.exception) h += `<div class="op-path op-exc"><div class="op-lbl">⚡ Exception</div>${esc(op.exception)}</div>`;
+    if (op.actors&&op.actors.length) {
+      h += '<div class="op-actors">';
+      op.actors.forEach(a => { h += `<div class="actor-row"><span class="actor-name">${esc(a.name)}</span>${a.capabilities&&a.capabilities.length?`<ul class="actor-caps">${a.capabilities.map(c=>`<li>${esc(c)}</li>`).join('')}</ul>`:''}</div>`; });
+      h += '</div>';
+    }
+    return `<div class="j-cell" style="font-size:11px">${h||'<span style="color:#ccc">—</span>'}</div>`;
+  }).join('');
+
+  const techCells = j.steps.map(s => `<div class="j-cell">${(s.tech_enablers||[]).map(t=>`<span class="tech-chip ${t.highlighted?'hl':''}">${esc(t.name)}</span>`).join('')||'<span style="color:#ccc">—</span>'}</div>`).join('');
+
+  const annBlocks = ['customer_journey','operation','technology'].map(k => annMap[k]).filter(Boolean).map(a => `
+    <div class="ann-block">
+      <div class="ann-tag">${sectionLabel(a.section)}</div>
+      <div class="ann-title">${esc(a.title)}</div>
+      <div class="ann-desc">${esc(a.description)}</div>
+    </div>`).join('');
+
+  const html = `<div class="journey-canvas" id="journey-output">
+    <div class="journey-inner">
+      <div class="journey-header">
+        <span class="journey-title">${esc(j.title)}</span>
+        <span class="journey-meta">${esc(j.persona||'')}</span>
+      </div>
+      <div class="journey-table">
+        <div class="j-row">
+          <div class="j-label dot-label-cell">·</div>
+          <div class="j-cells dot-cells-wrap"><div class="cells-row">${dotCells}</div></div>
+        </div>
+        ${laneRow('Future-state journey', jCells)}
+        ${laneRow('Touchpoint', tpCells)}
+        ${laneRow('Data', dCells)}
+        ${laneRow('Operation', opCells)}
+        ${laneRow('Technology enablers', techCells, true)}
+      </div>
+      <div class="ann-bar">
+        <div class="ann-bar-row">
+          <div class="ann-bar-spacer"></div>
+          <div class="ann-bar-cells"><div class="ann-bar-inner">${annBlocks}</div></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  const canvas = document.getElementById('canvas-area');
+  const es = document.getElementById('empty-state');
+  if (es) es.remove();
+  let wrap = document.getElementById('journey-output-wrap');
+  if (!wrap) { wrap = document.createElement('div'); wrap.id = 'journey-output-wrap'; canvas.insertBefore(wrap, canvas.firstChild); }
+  wrap.innerHTML = html + `<div class="export-row"><button class="export-btn" onclick="window.print()">Print / Export PDF</button></div>`;
+}
+
+const PRELOADED = {"title":"Monitoreo de camioneros — transporte de material","persona":"Camionero que transporta material de construcción entre múltiples puntos (A → B → ...→ N)","steps":[{"id":"step_1","label":"Registro inicial","journey_narrative":"Se asigna código QR único al camionero, impreso en tarjeta física.","touchpoint":["Oficina / administración"],"data":"ID camionero, nombre, código QR","operation":{"happy_path":"QR generado e impreso, asignado al camionero.","exception":"QR dañado — requiere reimpresión antes de iniciar.","actors":[{"name":"Administración","capabilities":["Generar y asignar QR","Imprimir tarjeta"]}]},"tech_enablers":[{"name":"Generador QR","highlighted":true},{"name":"Airtable","highlighted":false}]},{"id":"step_2","label":"Llegada a carga (Lugar A)","journey_narrative":"Camionero llega al origen. Supervisor escanea QR, registrando hora de llegada.","touchpoint":["Celular supervisor","QR físico"],"data":"ID camionero, lugar, timestamp llegada","operation":{"happy_path":"Escaneo exitoso, datos enviados a Airtable.","exception":"Sin señal o QR ilegible — registro manual.","actors":[{"name":"Guardia / supervisor","capabilities":["Escanear QR con celular"]}]},"tech_enablers":[{"name":"App escaneo QR","highlighted":true},{"name":"Airtable","highlighted":false}]},{"id":"step_3","label":"Carga de material","journey_narrative":"Camionero espera carga. Supervisor escanea QR al finalizar.","touchpoint":["Celular supervisor","QR físico"],"data":"Timestamp inicio y fin carga, duración","operation":{"happy_path":"Carga completada en tiempo, escaneo de salida registrado.","exception":"Demora supera media — alerta automática a gerente.","actors":[{"name":"Guardia / supervisor","capabilities":["Escanear salida de carga"]},{"name":"Gerente de obra","capabilities":["Recibir alerta de desvío"]}]},"tech_enablers":[{"name":"Airtable (automatización)","highlighted":true},{"name":"Sistema de alertas","highlighted":true}]},{"id":"step_4","label":"Tránsito entre puntos","journey_narrative":"Camionero viaja al destino. Tiempo de tránsito calculado entre escaneos.","touchpoint":["Sin interacción activa"],"data":"Tiempo tránsito (derivado de timestamps)","operation":{"happy_path":"Tránsito dentro del rango esperado.","exception":"Tiempo excesivo — alerta a gerente por desvío o demora.","actors":[{"name":"Sistema","capabilities":["Calcular tiempo tránsito"]}]},"tech_enablers":[{"name":"Airtable (campos calculados)","highlighted":true},{"name":"Sistema de alertas","highlighted":false}]},{"id":"step_5","label":"Llegada y descarga (B...N)","journey_narrative":"Supervisor escanea QR al llegar y al terminar descarga. Se repite por cada punto.","touchpoint":["Celular supervisor","QR físico"],"data":"Timestamp llegada, fin descarga, lugar, duración","operation":{"happy_path":"Escaneos registrados. Ciclo se repite para siguiente punto.","exception":"Supervisor no disponible — escaneo tardío afecta KPIs.","actors":[{"name":"Guardia / supervisor","capabilities":["Escanear llegada y fin descarga"]}]},"tech_enablers":[{"name":"App escaneo QR","highlighted":true},{"name":"Airtable","highlighted":false}]},{"id":"step_6","label":"Monitoreo en dashboard","journey_narrative":"Gerente revisa dashboard en tiempo real: tiempos por tramo, KPIs, desviaciones, ubicación.","touchpoint":["Dashboard web / móvil"],"data":"KPIs: tiempo tramo, carga/descarga, camionero, lugar, fecha","operation":{"happy_path":"Dashboard actualizado, KPIs dentro de parámetros.","exception":"KPI fuera de media — alerta automática al gerente.","actors":[{"name":"Gerente de obra","capabilities":["Revisar dashboard","Responder alertas"]}]},"tech_enablers":[{"name":"Dashboard Airtable / BI","highlighted":true},{"name":"Sistema de alertas","highlighted":true}]},{"id":"step_7","label":"Análisis y agrupación","journey_narrative":"Data agrupada por día, camionero, lugar. Identifica patrones e ineficiencias.","touchpoint":["Dashboard web"],"data":"Agrupaciones: día, camionero, lugar, ruta","operation":{"happy_path":"Filtros aplicados, vistas por segmento disponibles.","exception":"Datos incompletos por escaneos faltantes — gaps marcados.","actors":[{"name":"Gerente / analista","capabilities":["Filtrar y analizar por dimensión"]}]},"tech_enablers":[{"name":"Airtable Views / BI","highlighted":true}]}],"annotations":[{"section":"customer_journey","title":"Trazabilidad completa del ciclo","description":"Cada punto físico genera registro digital. Ruta completa trazada sin intervención manual."},{"section":"operation","title":"Alertas por desvío de media","description":"Sistema detecta tiempos fuera de rango y notifica al gerente sin esperar reporte manual."},{"section":"technology","title":"Stack simple, datos ricos","description":"QR físico + celular + Airtable. Complejidad en automatizaciones, no en infraestructura."}]};
+</script>
+</body>
+</html>

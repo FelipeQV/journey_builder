@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Construction Material Transport Monitoring</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', system-ui, sans-serif; background: #f5f4f0; padding: 24px; }
+
+*, ::before, ::after { box-sizing: border-box; margin: 0px; padding: 0px; }
+body { font-family: "DM Sans", system-ui, sans-serif; background: rgb(245, 244, 240); color: rgb(26, 26, 24); min-height: 100vh; }
+.app { display: grid; grid-template-rows: 52px 1fr; min-height: 100vh; }
+header { background: rgb(26, 26, 24); display: flex; align-items: center; justify-content: space-between; padding: 0px 24px; position: sticky; top: 0px; z-index: 100; }
+.logo { color: rgb(255, 255, 255); font-size: 13px; font-weight: 500; letter-spacing: 0.04em; }
+.logo span { color: rgb(184, 224, 74); }
+.badge { font-size: 11px; background: rgb(46, 46, 43); color: rgb(136, 136, 136); padding: 3px 10px; border-radius: 20px; }
+main { display: grid; grid-template-columns: 360px 1fr; height: calc(-52px + 100vh); overflow: hidden; }
+.panel-left { background: rgb(255, 255, 255); border-right: 1px solid rgb(232, 230, 224); display: flex; flex-direction: column; overflow-y: auto; }
+.panel-section { padding: 16px 20px 0px; }
+.p-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; color: rgb(136, 136, 136); text-transform: uppercase; display: block; margin-bottom: 6px; }
+.phase-indicator { display: flex; align-items: center; gap: 6px; padding: 10px 20px; border-bottom: 1px solid rgb(232, 230, 224); background: rgb(250, 250, 248); }
+.phase-dot { width: 7px; height: 7px; border-radius: 50%; background: rgb(232, 230, 224); transition: background 0.2s; }
+.phase-dot.active { background: rgb(184, 224, 74); }
+.phase-dot.done { background: rgb(26, 26, 24); }
+.phase-label { font-size: 11px; color: rgb(136, 136, 136); margin-left: 4px; }
+.phase-label strong { color: rgb(26, 26, 24); font-weight: 600; }
+textarea { width: 100%; resize: none; border: 1px solid rgb(232, 230, 224); border-radius: 8px; padding: 10px 12px; font-size: 13px; font-family: inherit; color: rgb(26, 26, 24); background: rgb(250, 250, 248); line-height: 1.6; transition: border-color 0.15s; }
+textarea:focus { outline: none; border-color: rgb(184, 224, 74); background: rgb(255, 255, 255); }
+textarea::placeholder { color: rgb(187, 187, 187); }
+input[type="password"], input[type="text"] { width: 100%; border: 1px solid rgb(232, 230, 224); border-radius: 8px; padding: 9px 12px; font-size: 13px; font-family: inherit; color: rgb(26, 26, 24); background: rgb(250, 250, 248); transition: border-color 0.15s; }
+input[type="password"]:focus, input[type="text"]:focus { outline: none; border-color: rgb(184, 224, 74); background: rgb(255, 255, 255); }
+.input-grow { flex: 1 1 0%; display: flex; flex-direction: column; padding: 12px 20px; min-height: 160px; }
+.btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: 0.15s; border: none; width: 100%; font-family: inherit; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-primary { background: rgb(26, 26, 24); color: rgb(255, 255, 255); }
+.btn-primary:hover:not(:disabled) { background: rgb(46, 46, 43); }
+.btn-secondary { background: transparent; color: rgb(85, 85, 85); border: 1px solid rgb(232, 230, 224); }
+.btn-secondary:hover:not(:disabled) { background: rgb(245, 244, 240); }
+.btn-ghost { background: transparent; color: rgb(170, 170, 170); border: none; font-size: 12px; padding: 6px 0px; width: auto; }
+.btn-ghost:hover { color: rgb(26, 26, 24); }
+.divider { height: 1px; background: rgb(232, 230, 224); margin: 0px 20px; }
+.actions-row { display: flex; gap: 8px; padding: 14px 20px; border-top: 1px solid rgb(232, 230, 224); }
+.loading-state { display: none; align-items: center; gap: 10px; padding: 10px 20px; font-size: 13px; color: rgb(136, 136, 136); }
+.loading-state.active { display: flex; }
+.spinner { width: 16px; height: 16px; border-width: 2px; border-style: solid; border-color: rgb(184, 224, 74) rgb(232, 230, 224) rgb(232, 230, 224); border-image: initial; border-radius: 50%; animation: 0.7s linear 0s infinite normal none running spin; }
+@keyframes spin { 
+  100% { transform: rotate(360deg); }
+}
+.error-msg { font-size: 12px; color: rgb(192, 57, 43); background: rgb(253, 242, 242); border: 1px solid rgb(245, 198, 203); border-radius: 6px; padding: 8px 12px; margin: 4px 20px 0px; }
+.apikey-section { padding: 14px 20px; border-bottom: 1px solid rgb(232, 230, 224); }
+.apikey-row { display: flex; gap: 6px; align-items: center; margin-top: 6px; }
+.apikey-row input { flex: 1 1 0%; }
+.key-status { font-size: 11px; margin-top: 5px; }
+.key-status.ok { color: rgb(39, 174, 96); }
+.key-status.missing { color: rgb(230, 126, 34); }
+.lane-list { padding: 10px 20px; display: flex; flex-direction: column; gap: 6px; }
+.lane-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 7px; border: 1px solid rgb(232, 230, 224); cursor: pointer; transition: 0.1s; font-size: 13px; }
+.lane-item:hover { border-color: rgb(184, 224, 74); background: rgb(250, 255, 240); }
+.lane-item.checked { border-color: rgb(26, 26, 24); background: rgb(250, 250, 248); }
+.lane-check { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid rgb(204, 204, 204); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: 0.1s; }
+.lane-item.checked .lane-check { background: rgb(26, 26, 24); border-color: rgb(26, 26, 24); }
+.lane-check-icon { color: rgb(255, 255, 255); font-size: 10px; }
+.lane-name { flex: 1 1 0%; font-weight: 500; color: rgb(26, 26, 24); }
+.lane-tag { font-size: 10px; color: rgb(170, 170, 170); background: rgb(245, 244, 240); border-radius: 4px; padding: 2px 6px; }
+.add-lane-row { padding: 6px 20px 14px; }
+.add-lane-input { display: flex; gap: 6px; margin-top: 6px; }
+.add-lane-input input { flex: 1 1 0%; }
+.step-list { padding: 8px 20px; display: flex; flex-direction: column; gap: 6px; }
+.step-item { border: 1px solid rgb(232, 230, 224); border-radius: 8px; overflow: hidden; }
+.step-header { display: flex; align-items: center; gap: 8px; padding: 10px 12px; cursor: pointer; background: rgb(250, 250, 248); transition: background 0.1s; }
+.step-header:hover { background: rgb(245, 244, 240); }
+.step-num { font-size: 10px; font-weight: 700; color: rgb(184, 224, 74); min-width: 20px; }
+.step-title { flex: 1 1 0%; font-size: 13px; font-weight: 500; color: rgb(26, 26, 24); }
+.step-chevron { font-size: 10px; color: rgb(170, 170, 170); transition: transform 0.15s; }
+.step-chevron.open { transform: rotate(180deg); }
+.step-body { padding: 12px; border-top: 1px solid rgb(240, 238, 234); display: flex; flex-direction: column; gap: 10px; }
+.step-field label { font-size: 10px; font-weight: 700; color: rgb(170, 170, 170); letter-spacing: 0.06em; text-transform: uppercase; display: block; margin-bottom: 4px; }
+.step-field input, .step-field textarea { font-size: 12px; padding: 7px 10px; }
+.step-field textarea { min-height: 60px; }
+.step-delete { font-size: 11px; color: rgb(192, 57, 43); background: none; border: none; cursor: pointer; padding: 0px; font-family: inherit; align-self: flex-end; }
+.step-delete:hover { text-decoration: underline; }
+.add-step-btn { margin: 0px 20px 12px; padding: 8px; border: 1px dashed rgb(204, 204, 204); border-radius: 8px; background: transparent; font-size: 12px; color: rgb(170, 170, 170); cursor: pointer; font-family: inherit; width: calc(100% - 40px); transition: 0.1s; }
+.add-step-btn:hover { border-color: rgb(26, 26, 24); color: rgb(26, 26, 24); }
+.metadata-form { padding: 12px 20px; display: flex; flex-direction: column; gap: 10px; }
+.meta-field label { font-size: 10px; font-weight: 700; color: rgb(170, 170, 170); letter-spacing: 0.06em; text-transform: uppercase; display: block; margin-bottom: 4px; }
+.meta-field input { font-size: 13px; }
+.panel-right { overflow: auto; padding: 28px; background: rgb(245, 244, 240); display: flex; flex-direction: column; align-items: center; gap: 20px; }
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 12px; color: rgb(170, 170, 170); text-align: center; }
+.empty-icon { font-size: 36px; opacity: 0.4; }
+.empty-state p { font-size: 13px; max-width: 260px; line-height: 1.6; }
+#journey-output-wrap { width: 100%; max-width: 1400px; display: flex; flex-direction: column; gap: 10px; }
+.journey-canvas { background: rgb(255, 255, 255); border-radius: 12px; box-shadow: rgba(0, 0, 0, 0.06) 0px 1px 4px; width: 100%; overflow-x: auto; font-family: "DM Sans", system-ui, sans-serif; }
+.journey-inner { min-width: max-content; }
+.journey-header { padding: 18px 20px 14px 130px; border-bottom: 1px solid rgb(232, 230, 224); display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+.journey-title { font-size: 15px; font-weight: 600; color: rgb(26, 26, 24); }
+.journey-meta { font-size: 12px; color: rgb(170, 170, 170); }
+.journey-meta-tags { display: flex; gap: 10px; flex-wrap: wrap; margin-left: auto; }
+.meta-tag { font-size: 11px; color: rgb(136, 136, 136); background: rgb(245, 244, 240); border-radius: 4px; padding: 2px 8px; }
+.journey-table { display: table; border-collapse: collapse; }
+.j-row { display: table-row; }
+.j-label { display: table-cell; width: 130px; min-width: 130px; padding: 10px 12px 10px 20px; font-size: 11px; font-weight: 700; color: rgb(26, 26, 24); letter-spacing: 0.03em; border-bottom: 1px solid rgb(240, 238, 234); vertical-align: middle; background: rgb(250, 250, 248); position: sticky; left: 0px; z-index: 2; box-shadow: rgb(232, 230, 224) 1px 0px 0px; }
+.j-label.dot-label-cell { border-bottom: 2px solid rgb(232, 230, 224); background: rgb(255, 255, 255); color: transparent; font-size: 0px; }
+.j-cells { display: table-cell; border-bottom: 1px solid rgb(240, 238, 234); vertical-align: top; }
+.j-cells.dot-cells-wrap { border-bottom: 2px solid rgb(232, 230, 224); vertical-align: middle; background: rgb(255, 255, 255); }
+.cells-row { display: flex; }
+.j-row.divider-row .j-label { background: rgb(26, 26, 24); color: rgb(184, 224, 74); font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; border-bottom: none; }
+.j-row.divider-row .j-cells { background: rgb(26, 26, 24); border-bottom: none; }
+.j-row.divider-row .cells-row { height: 4px; }
+.j-cell { width: 200px; min-width: 200px; max-width: 200px; padding: 14px 12px; border-right: 1px solid rgb(240, 238, 234); font-size: 12px; color: rgb(51, 51, 51); line-height: 1.6; min-height: 52px; }
+.j-cell:last-child { border-right: none; }
+.dot-cell { width: 200px; min-width: 200px; max-width: 200px; display: flex; flex-direction: column; align-items: center; padding: 16px 12px 12px; position: relative; }
+.dot-cell::before { content: ""; position: absolute; top: 22px; left: 0px; right: 0px; height: 1.5px; background: rgb(224, 222, 218); z-index: 0; }
+.dot-cell:first-child::before { left: 50%; }
+.dot-cell:last-child::before { right: 50%; }
+.dot { width: 11px; height: 11px; border-radius: 50%; background: rgb(26, 26, 24); border: 2px solid rgb(255, 255, 255); box-shadow: rgb(26, 26, 24) 0px 0px 0px 1.5px; position: relative; z-index: 1; flex-shrink: 0; }
+.dot-step-label { font-size: 10px; color: rgb(85, 85, 85); margin-top: 8px; text-align: center; max-width: 170px; line-height: 1.4; font-weight: 500; }
+.tp-chip { display: inline-block; background: rgb(240, 238, 234); border-radius: 4px; padding: 2px 7px; font-size: 11px; color: rgb(85, 85, 85); font-weight: 500; margin: 2px 2px 2px 0px; }
+.tech-chip { display: inline-flex; align-items: center; background: rgb(26, 26, 24); border-radius: 4px; padding: 3px 7px; font-size: 11px; color: rgb(255, 255, 255); font-weight: 500; margin: 2px 2px 2px 0px; }
+.tech-chip.hl { background: rgb(184, 224, 74); color: rgb(26, 26, 24); }
+.op-path { margin-bottom: 7px; }
+.op-lbl { font-size: 10px; font-weight: 700; color: rgb(26, 26, 24); margin-bottom: 2px; }
+.op-exc .op-lbl { color: rgb(192, 57, 43); }
+.op-actors { margin-top: 7px; border-top: 1px dashed rgb(238, 238, 238); padding-top: 7px; }
+.actor-row { display: flex; gap: 6px; margin-bottom: 4px; font-size: 11px; }
+.actor-name { font-weight: 600; color: rgb(26, 26, 24); min-width: 70px; flex-shrink: 0; }
+.actor-caps li { margin-left: 12px; color: rgb(85, 85, 85); }
+.ann-bar { display: table; border-collapse: collapse; border-top: 2px solid rgb(26, 26, 24); }
+.ann-bar-row { display: table-row; }
+.ann-bar-spacer { display: table-cell; width: 130px; min-width: 130px; background: rgb(250, 250, 248); border-right: 1px solid rgb(232, 230, 224); }
+.ann-bar-cells { display: table-cell; }
+.ann-bar-inner { display: flex; }
+.ann-block { flex: 1 1 0%; padding: 14px; border-right: 1px solid rgb(240, 238, 234); }
+.ann-block:last-child { border-right: none; }
+.ann-tag { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: rgb(184, 224, 74); text-transform: uppercase; margin-bottom: 5px; }
+.ann-title { font-size: 12px; font-weight: 700; color: rgb(26, 26, 24); margin-bottom: 4px; }
+.ann-desc { font-size: 11px; color: rgb(102, 102, 102); line-height: 1.6; }
+.export-row { display: flex; justify-content: flex-end; }
+.export-btn { font-size: 12px; padding: 7px 16px; border-radius: 6px; border: 1px solid rgb(221, 221, 221); background: rgb(255, 255, 255); cursor: pointer; color: rgb(85, 85, 85); font-family: inherit; transition: 0.1s; }
+.export-btn:hover { background: rgb(26, 26, 24); color: rgb(255, 255, 255); border-color: rgb(26, 26, 24); }
+</style>
+</head>
+<body>
+<div id="journey-output-wrap">
+<div class="journey-canvas" id="journey-output"><div class="journey-inner"><div class="journey-header"><span class="journey-title">Monitoreo de carga y descarga de material</span><span class="journey-meta">Truck driver transporting construction materials between multiple sites on scheduled routes</span><div class="journey-meta-tags"><span class="meta-tag">Monitoreo conductores Reci-Track</span><span class="meta-tag">Reci-Track</span><span class="meta-tag">v1.0</span><span class="meta-tag">2026-03-24</span></div></div><div class="journey-table"><div class="j-row"><div class="j-label dot-label-cell">·</div><div class="j-cells dot-cells-wrap"><div class="cells-row"><div class="dot-cell"><div class="dot"></div><div class="dot-step-label">Route Start</div></div><div class="dot-cell"><div class="dot"></div><div class="dot-step-label">Loading Process</div></div><div class="dot-cell"><div class="dot"></div><div class="dot-step-label">Transit Tracking</div></div><div class="dot-cell"><div class="dot"></div><div class="dot-step-label">Delivery Completion</div></div></div></div></div><div class="j-row divider-row"><div class="j-label">Frontstage</div><div class="j-cells"><div class="cells-row"></div></div></div><div class="j-row"><div class="j-label">Future-state journey</div><div class="j-cells"><div class="cells-row"><div class="j-cell">Driver arrives at first loading site with QR card</div><div class="j-cell">Material loading completed, supervisor scans QR again</div><div class="j-cell">Driver travels to next site while data processes</div><div class="j-cell">Unloading finished, final QR scan logs completion</div></div></div></div><div class="j-row"><div class="j-label">Touchpoint</div><div class="j-cells"><div class="cells-row"><div class="j-cell"><span class="tp-chip">Physical QR card</span><span class="tp-chip">Loading site</span></div><div class="j-cell"><span class="tp-chip">QR card</span><span class="tp-chip">Mobile scanner</span></div><div class="j-cell"><span class="tp-chip">Vehicle</span><span class="tp-chip">Route</span></div><div class="j-cell"><span class="tp-chip">QR card</span><span class="tp-chip">Unloading site</span></div></div></div></div><div class="j-row"><div class="j-label">Driver</div><div class="j-cells"><div class="cells-row"><div class="j-cell" style="font-size: 11px;"><div class="op-path"><div class="op-lbl">✓ Action</div>Shows QR card to supervisor on arrival</div></div><div class="j-cell" style="font-size: 11px;"><div class="op-path"><div class="op-lbl">✓ Action</div>Presents QR card after loading completion</div></div><div class="j-cell" style="font-size: 11px;"><div class="op-path"><div class="op-lbl">✓ Action</div>Travels between sites following planned route</div></div><div class="j-cell" style="font-size: 11px;"><div class="op-path"><div class="op-lbl">✓ Action</div>Shows QR card after unloading completion</div></div></div></div></div><div class="j-row"><div class="j-label">Site Supervisor</div><div class="j-cells"><div class="cells-row"><div class="j-cell" style="font-size: 11px;"><div class="op-path"><div class="op-lbl">✓ Action</div>Scans driver QR code with mobile phone</div></div><div class="j-cell" style="font-size: 11px;"><div class="op-path"><div class="op-lbl">✓ Action</div>Scans QR upon load completion confirmation</div></div><div class="j-cell"><span style="color: rgb(204, 204, 204);">—</span></div><div class="j-cell" style="font-size: 11px;"><div class="op-path"><div class="op-lbl">✓ Action</div>Performs final QR scan confirming delivery</div></div></div></div></div><div class="j-row"><div class="j-label">Site Manager</div><div class="j-cells"><div class="cells-row"><div class="j-cell"><span style="color: rgb(204, 204, 204);">—</span></div><div class="j-cell"><span style="color: rgb(204, 204, 204);">—</span></div><div class="j-cell" style="font-size: 11px;"><div class="op-path"><div class="op-lbl">✓ Action</div>Monitors live dashboard for route progress</div></div><div class="j-cell" style="font-size: 11px;"><div class="op-path"><div class="op-lbl">✓ Action</div>Reviews completion data and performance metrics</div></div></div></div></div><div class="j-row divider-row"><div class="j-label">Backstage</div><div class="j-cells"><div class="cells-row"></div></div></div><div class="j-row"><div class="j-label">Operation</div><div class="j-cells"><div class="cells-row"><div class="j-cell" style="font-size: 11px;"><div class="op-path"><div class="op-lbl">✓ Happy path</div>QR card ready and accessible in wallet</div><div class="op-path op-exc"><div class="op-lbl">⚡ Exception</div>QR card missing or damaged</div></div><div class="j-cell" style="font-size: 11px;"><div class="op-path"><div class="op-lbl">✓ Happy path</div>Loading completes on schedule, scan successful</div><div class="op-path op-exc"><div class="op-lbl">⚡ Exception</div>Loading delays or scan failure</div></div><div class="j-cell" style="font-size: 11px;"><div class="op-path"><div class="op-lbl">✓ Happy path</div>Transit time within normal range parameters</div><div class="op-path op-exc"><div class="op-lbl">⚡ Exception</div>Delays exceed historical averages triggering alerts</div></div><div class="j-cell" style="font-size: 11px;"><div class="op-path"><div class="op-lbl">✓ Happy path</div>Unloading completes efficiently, data recorded successfully</div><div class="op-path op-exc"><div class="op-lbl">⚡ Exception</div>Unloading delays trigger automatic KPI alerts</div></div></div></div></div><div class="j-row"><div class="j-label">Data captured</div><div class="j-cells"><div class="cells-row"><div class="j-cell" style="font-size: 11px; color: rgb(102, 102, 102);">Driver ID, arrival timestamp, site location</div><div class="j-cell" style="font-size: 11px; color: rgb(102, 102, 102);">Load completion timestamp, material type, quantity</div><div class="j-cell" style="font-size: 11px; color: rgb(102, 102, 102);">Transit duration, route efficiency metrics</div><div class="j-cell" style="font-size: 11px; color: rgb(102, 102, 102);">Unload completion timestamp, delivery confirmation, performance metrics</div></div></div></div><div class="j-row"><div class="j-label">Technology enablers</div><div class="j-cells"><div class="cells-row"><div class="j-cell"><span class="tech-chip hl">Mobile scanning app</span><span class="tech-chip hl">Airtable backend</span></div><div class="j-cell"><span class="tech-chip hl">Mobile scanning app</span><span class="tech-chip hl">Calculated fields system</span></div><div class="j-cell"><span class="tech-chip hl">Dashboard system</span><span class="tech-chip hl">Alert rules engine</span></div><div class="j-cell"><span class="tech-chip hl">Performance analytics</span><span class="tech-chip hl">Grouping filters</span></div></div></div></div></div><div class="ann-bar"><div class="ann-bar-row"><div class="ann-bar-spacer"></div><div class="ann-bar-cells"><div class="ann-bar-inner"><div class="ann-block"><div class="ann-tag">Customer journey</div><div class="ann-title">Seamless QR Workflow</div><div class="ann-desc">Driver simply shows QR card while supervisors handle all scanning and data capture</div></div><div class="ann-block"><div class="ann-tag">Operations</div><div class="ann-title">Automated Calculations</div><div class="ann-desc">Transit and loading times derived automatically from timestamped scan pairs</div></div><div class="ann-block"><div class="ann-tag">Technology enablers</div><div class="ann-title">Real-time Monitoring</div><div class="ann-desc">Live dashboard with filtering and automatic alerts for performance deviations</div></div></div></div></div></div></div></div>
+</div>
+</body>
+</html>
