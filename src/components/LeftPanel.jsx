@@ -3,6 +3,7 @@ import LaneSelectPhase from './phases/LaneSelectPhase'
 import StepReviewPhase from './phases/StepReviewPhase'
 import MetadataPhase from './phases/MetadataPhase'
 import ExportPhase from './phases/ExportPhase'
+import CanvasViewPhase from './phases/CanvasViewPhase'
 
 const PHASE_LABELS = ['Input', 'Lanes', 'Steps', 'Metadata', 'Export']
 
@@ -25,11 +26,22 @@ export default function LeftPanel({
   onMetadataBack,
   onExportBack,
   onReset,
+  onBackToIndex,
 }) {
   return (
     <div className="panel-left">
-      {/* Phase indicator */}
-      <div className="phase-indicator">
+      {phase === 0 && (
+        <CanvasViewPhase
+          journey={journey}
+          metadata={metadata}
+          onEdit={onReset}
+          onBackToIndex={onBackToIndex}
+        />
+      )}
+
+
+      {/* Phase indicator — only for wizard phases */}
+      {phase > 0 && <div className="phase-indicator">
         {PHASE_LABELS.map((label, i) => {
           const phaseIndex = i + 1
           let state = ''
@@ -40,7 +52,7 @@ export default function LeftPanel({
         <span className="phase-label">
           <strong>{PHASE_LABELS[phase - 1]}</strong>
         </span>
-      </div>
+      </div>}
 
       {phase === 1 && (
         <InputPhase
