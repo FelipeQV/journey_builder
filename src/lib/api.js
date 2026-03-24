@@ -61,7 +61,7 @@ Schema:
       "exception": "Failure or edge case (max 12 words, or null)",
       "data": "Data captured (max 10 words, or null)",
       "actors": [
-        { "name": "Actor name", "action": "What they do at this step (max 12 words)", "is_exception": false }
+        { "lane_id": "actor__<exact_id_from_proposed_lanes>", "action": "What they do at this step (max 12 words)", "is_exception": false }
       ],
       "technology": [{ "name": "System name", "highlighted": true }]
     }
@@ -77,6 +77,7 @@ Rules:
 - proposed_lanes must include journey_narrative, touchpoint, data, technology always
 - Add one lane per distinct actor found in the input, id format: actor__<ActorName>
 - group: "frontstage" = journey, touchpoints, and actors the user directly interacts with; "backstage" = data systems, technology, hidden operations
+- actors[].lane_id must exactly match the id of the corresponding proposed_lane (e.g. "actor__Site_Supervisor")
 - Return ONLY the raw JSON object, no markdown`
 
   const text = await callClaude(key, system, rawInput)

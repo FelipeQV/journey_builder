@@ -23,14 +23,8 @@ function DataCell({ step }) {
   )
 }
 
-function normalizeName(s) {
-  return String(s || '').toLowerCase().replace(/_/g, ' ').trim()
-}
-
-function ActorCell({ step, actorName }) {
-  const actor = (step.actors || []).find(
-    (a) => normalizeName(a.name) === normalizeName(actorName)
-  )
+function ActorCell({ step, laneId }) {
+  const actor = (step.actors || []).find((a) => a.lane_id === laneId)
   if (!actor) return <div className="j-cell">{empty()}</div>
   return (
     <div className="j-cell" style={{ fontSize: 11 }}>
@@ -93,7 +87,7 @@ export default function LaneRow({ lane, steps }) {
     if (lane.id === 'technology') return <TechnologyCell key={step.id} step={step} />
     if (lane.id === 'operation') return <OperationCell key={step.id} step={step} />
     if (lane.id.startsWith('actor__')) {
-      return <ActorCell key={step.id} step={step} actorName={lane.matchName || lane.label} />
+      return <ActorCell key={step.id} step={step} laneId={lane.id} />
     }
     if (lane.id.startsWith('custom__')) return <CustomCell key={step.id} step={step} laneId={lane.id} />
     return <div key={step.id} className="j-cell">{empty()}</div>

@@ -1,25 +1,19 @@
 import { useState } from 'react'
 
-function normalizeName(s) {
-  return String(s || '').toLowerCase().replace(/_/g, ' ').trim()
-}
-
 function ActorEditor({ actors = [], actorLanes = [], onChange }) {
-  function resolveLabel(actorName) {
-    const lane = actorLanes.find(
-      (l) => normalizeName(l.matchName || l.label) === normalizeName(actorName)
-    )
-    return lane ? lane.label : actorName
+  function resolveLabel(actor) {
+    const lane = actorLanes.find((l) => l.id === actor.lane_id)
+    return lane ? lane.label : actor.lane_id || '?'
   }
 
   function updateActor(i, field, value) {
     onChange(actors.map((a, idx) => idx === i ? { ...a, [field]: value } : a))
   }
 
-  function addActor(matchName) {
-    if (!matchName) return
-    if (actors.find((a) => a.name.toLowerCase() === matchName.toLowerCase())) return
-    onChange([...actors, { name: matchName, action: '', is_exception: false }])
+  function addActor(laneId) {
+    if (!laneId) return
+    if (actors.find((a) => a.lane_id === laneId)) return
+    onChange([...actors, { lane_id: laneId, action: '', is_exception: false }])
   }
 
   function removeActor(i) {
@@ -27,7 +21,7 @@ function ActorEditor({ actors = [], actorLanes = [], onChange }) {
   }
 
   const availableToAdd = actorLanes.filter(
-    (l) => !actors.find((a) => a.name.toLowerCase() === (l.matchName || l.label).toLowerCase())
+    (l) => !actors.find((a) => a.lane_id === l.id)
   )
 
   return (
@@ -37,7 +31,7 @@ function ActorEditor({ actors = [], actorLanes = [], onChange }) {
         <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8, padding: '8px 10px', background: '#fafaf8', borderRadius: 6, border: '1px solid #f0eeea' }}>
           <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
             <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: '#1a1a18', padding: '5px 0' }}>
-              {resolveLabel(actor.name)}
+              {resolveLabel(actor)}
             </span>
             <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#c0392b', whiteSpace: 'nowrap', cursor: 'pointer', textTransform: 'none', letterSpacing: 0, fontWeight: 400 }}>
               <input
@@ -67,7 +61,7 @@ function ActorEditor({ actors = [], actorLanes = [], onChange }) {
         >
           <option value="" disabled>+ Add actor</option>
           {availableToAdd.map((l) => (
-            <option key={l.id} value={l.matchName || l.label}>{l.label}</option>
+            <option key={l.id} value={l.id}>{l.label}</option>
           ))}
         </select>
       )}
