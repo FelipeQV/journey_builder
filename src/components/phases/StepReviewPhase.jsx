@@ -69,6 +69,33 @@ function ActorEditor({ actors = [], actorLanes = [], onChange }) {
   )
 }
 
+function AutomationEditor({ automation = [], onChange }) {
+  function update(i, field, value) {
+    onChange(automation.map((a, idx) => idx === i ? { ...a, [field]: value } : a))
+  }
+  function add() { onChange([...automation, { trigger: '', output: '' }]) }
+  function remove(i) { onChange(automation.filter((_, idx) => idx !== i)) }
+
+  return (
+    <div className="step-field">
+      <label>Automation</label>
+      {automation.map((a, i) => (
+        <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 6, padding: '7px 10px', background: '#fafaf8', borderRadius: 6, border: '1px solid #f0eeea' }}>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <input type="text" value={a.trigger} onChange={(e) => update(i, 'trigger', e.target.value)} placeholder="Trigger" style={{ flex: 1, fontSize: 12, padding: '4px 8px' }} />
+            <span style={{ color: '#aaa', fontSize: 12 }}>→</span>
+            <input type="text" value={a.output} onChange={(e) => update(i, 'output', e.target.value)} placeholder="Automated output" style={{ flex: 2, fontSize: 12, padding: '4px 8px' }} />
+            <button onClick={() => remove(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', fontSize: 14, lineHeight: 1, padding: '0 2px' }}>×</button>
+          </div>
+        </div>
+      ))}
+      <button onClick={add} style={{ background: 'none', border: '1px dashed #ccc', borderRadius: 6, padding: '5px 10px', fontSize: 11, color: '#aaa', cursor: 'pointer', fontFamily: 'inherit', width: '100%' }}>
+        + Add automation
+      </button>
+    </div>
+  )
+}
+
 function TechEditor({ tech = [], onChange }) {
   function updateTech(i, field, value) {
     onChange(tech.map((t, idx) => idx === i ? { ...t, [field]: value } : t))
@@ -159,6 +186,7 @@ function StepItem({ step, index, onUpdate, onDelete, customLanes, actorLanes }) 
             <label>Exception</label>
             <input type="text" value={step.exception || ''} onChange={(e) => update('exception', e.target.value)} placeholder="Failure or edge case (max 12 words)" />
           </div>
+          <AutomationEditor automation={step.automation || []} onChange={(automation) => update('automation', automation)} />
           <TechEditor tech={step.technology || []} onChange={(technology) => update('technology', technology)} />
           {customLanes.map((lane) => (
             <div key={lane.id} className="step-field">
@@ -178,8 +206,9 @@ function StepItem({ step, index, onUpdate, onDelete, customLanes, actorLanes }) 
   )
 }
 
-export default function StepReviewPhase({ steps: initialSteps, selectedLanes = [], onStepsChange, onRebuild, onConfirm, onBack, loading, loadingMsg, error }) {
+export default function StepReviewPhase({ steps: initialSteps, selectedLanes = [], onStepsChange, onApplyInstruction, onConfirm, onBack, loading, loadingMsg, error }) {
   const [steps, setSteps] = useState(initialSteps)
+  const [instruction, setInstruction] = useState('')
   const customLanes = selectedLanes.filter((l) => l.id.startsWith('custom__'))
   const actorLanes = selectedLanes.filter((l) => l.id.startsWith('actor__'))
 
@@ -220,23 +249,35 @@ export default function StepReviewPhase({ steps: initialSteps, selectedLanes = [
         <div className="error-msg" style={{ margin: '0 20px 8px' }}>{error}</div>
       )}
 
-      <div className="actions-row" style={{ flexDirection: 'column', gap: 8 }}>
+      <div style={{ padding: '12px 20px', borderTop: '1px solid #e8e6e0' }}>
+        <span className="p-label" style={{ marginBottom: 6 }}>Ask Claude to change something</span>
+        <textarea
+          value={instruction}
+          onChange={(e) => setInstruction(e.target.value)}
+          placeholder={'e.g. "Add a step about payment confirmation between steps 2 and 3" or "Fill in all empty automation fields"'}
+          rows={3}
+          onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && instruction.trim() && !loading) { onApplyInstruction(instruction); setInstruction('') } }}
+        />
+        {error && <div className="error-msg" style={{ margin: '6px 0 0' }}>{error}</div>}
         {loading ? (
-          <div className="loading-state active" style={{ padding: 0 }}>
-            <div className="spinner" />
-            <span>{loadingMsg}</span>
+          <div className="loading-state active" style={{ padding: '8px 0 0' }}>
+            <div className="spinner" /><span>{loadingMsg}</span>
           </div>
         ) : (
-          <button className="btn btn-secondary" onClick={() => onRebuild(steps)} style={{ width: '100%' }}>
-            ↺ Rebuild with Claude
+          <button
+            className="btn btn-secondary"
+            style={{ marginTop: 8 }}
+            disabled={!instruction.trim()}
+            onClick={() => { onApplyInstruction(instruction); setInstruction('') }}
+          >
+            ↗ Apply
           </button>
         )}
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn-secondary" onClick={onBack} style={{ flex: 1 }}>← Back</button>
-          <button className="btn btn-primary" onClick={() => onConfirm()} style={{ flex: 2 }}>
-            Confirm →
-          </button>
-        </div>
+      </div>
+
+      <div className="actions-row">
+        <button className="btn btn-secondary" onClick={onBack} style={{ flex: 1 }}>← Back</button>
+        <button className="btn btn-primary" onClick={() => onConfirm()} style={{ flex: 2 }}>Confirm →</button>
       </div>
     </>
   )

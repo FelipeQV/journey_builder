@@ -70,6 +70,22 @@ function OperationCell({ step }) {
   )
 }
 
+function AutomationCell({ step }) {
+  const items = step.automation || []
+  if (!items.length) return <div className="j-cell">{empty()}</div>
+  return (
+    <div className="j-cell" style={{ fontSize: 11 }}>
+      {items.map((a, i) => (
+        <div key={i} className="auto-item">
+          <span className="auto-trigger">{a.trigger}</span>
+          <span className="auto-arrow">→</span>
+          <span className="auto-output">{a.output}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function CustomCell({ step, laneId }) {
   const value = step.custom_data?.[laneId]
   return (
@@ -86,6 +102,7 @@ export default function LaneRow({ lane, steps }) {
     if (lane.id === 'data') return <DataCell key={step.id} step={step} />
     if (lane.id === 'technology') return <TechnologyCell key={step.id} step={step} />
     if (lane.id === 'operation') return <OperationCell key={step.id} step={step} />
+    if (lane.id === 'automation') return <AutomationCell key={step.id} step={step} />
     if (lane.id.startsWith('actor__')) {
       return <ActorCell key={step.id} step={step} laneId={lane.id} />
     }

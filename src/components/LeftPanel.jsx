@@ -19,12 +19,13 @@ export default function LeftPanel({
   onLanesConfirmed,
   onLanesBack,
   onStepsChange,
-  onRebuild,
+  onApplyInstruction,
   onStepsConfirmed,
   onStepsBack,
   onMetadataSave,
   onMetadataBack,
   onExportBack,
+  onEditFromView,
   onReset,
   onBackToIndex,
 }) {
@@ -34,7 +35,7 @@ export default function LeftPanel({
         <CanvasViewPhase
           journey={journey}
           metadata={metadata}
-          onEdit={onReset}
+          onEdit={onEditFromView}
           onBackToIndex={onBackToIndex}
         />
       )}
@@ -77,7 +78,7 @@ export default function LeftPanel({
           steps={journey.steps || []}
           selectedLanes={selectedLanes}
           onStepsChange={onStepsChange}
-          onRebuild={onRebuild}
+          onApplyInstruction={onApplyInstruction}
           onConfirm={onStepsConfirmed}
           onBack={onStepsBack}
           loading={loading}
@@ -99,7 +100,7 @@ export default function LeftPanel({
           journey={journey}
           metadata={metadata}
           onBack={onExportBack}
-          onReset={onReset}
+          onBackToIndex={onBackToIndex}
         />
       )}
     </div>

@@ -1,6 +1,6 @@
 import { exportHTML } from '../../lib/export'
 
-export default function ExportPhase({ journey, metadata, onBack, onReset }) {
+export default function ExportPhase({ journey, metadata, onBack, onBackToIndex }) {
   return (
     <>
       <div className="panel-section" style={{ paddingBottom: 10 }}>
@@ -22,7 +22,7 @@ export default function ExportPhase({ journey, metadata, onBack, onReset }) {
 
       <div className="actions-row">
         <button className="btn btn-secondary" onClick={onBack} style={{ flex: 1 }}>← Back</button>
-        <button className="btn btn-ghost" onClick={onReset} style={{ flex: 1 }}>Start over</button>
+        <button className="btn btn-ghost" onClick={onBackToIndex} style={{ flex: 1 }}>← Index</button>
       </div>
     </>
   )

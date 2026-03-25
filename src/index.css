@@ -342,6 +342,14 @@ input[type=text]:focus { outline: none; border-color: #b8e04a; background: #fff;
 .actor-name { font-weight: 600; color: #1a1a18; min-width: 70px; flex-shrink: 0; }
 .actor-caps li { margin-left: 12px; color: #555; }
 
+/* Automation lane */
+.auto-item { display: flex; align-items: baseline; gap: 4px; margin-bottom: 5px; flex-wrap: wrap; }
+.auto-item:last-child { margin-bottom: 0; }
+.auto-trigger { font-weight: 600; color: #1a1a18; }
+.auto-trigger::before { content: '⚡ '; }
+.auto-arrow { color: #aaa; flex-shrink: 0; }
+.auto-output { color: #555; }
+
 /* Annotation bar */
 .ann-bar { display: table; border-collapse: collapse; border-top: 2px solid #1a1a18; }
 .ann-bar-row { display: table-row; }

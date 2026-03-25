@@ -49,6 +49,7 @@ Schema:
     { "id": "actor__<ActorName>", "label": "<ActorName>", "matchName": "<ActorName>", "group": "frontstage" },
     { "id": "operation", "label": "Operation", "matchName": "Operation", "group": "backstage" },
     { "id": "data", "label": "Data captured", "matchName": "Data captured", "group": "backstage" },
+    { "id": "automation", "label": "Automation", "matchName": "Automation", "group": "backstage" },
     { "id": "technology", "label": "Technology enablers", "matchName": "Technology enablers", "group": "backstage" }
   ],
   "steps": [
@@ -63,6 +64,7 @@ Schema:
       "actors": [
         { "lane_id": "actor__<exact_id_from_proposed_lanes>", "action": "What they do at this step (max 12 words)", "is_exception": false }
       ],
+      "automation": [{ "trigger": "What triggers it (max 8 words)", "output": "What it does automatically (max 10 words)" }],
       "technology": [{ "name": "System name", "highlighted": true }]
     }
   ],
@@ -78,22 +80,21 @@ Rules:
 - Add one lane per distinct actor found in the input, id format: actor__<ActorName>
 - group: "frontstage" = journey, touchpoints, and actors the user directly interacts with; "backstage" = data systems, technology, hidden operations
 - actors[].lane_id must exactly match the id of the corresponding proposed_lane (e.g. "actor__Site_Supervisor")
+- automation: only populate when something genuinely runs automatically without human action
 - Return ONLY the raw JSON object, no markdown`
 
   const text = await callClaude(key, system, rawInput)
   return parseJSON(text)
 }
 
-// ── Phase 3: Rebuild from edited steps ────────────────────────────────────
-export async function rebuildJourney(key, currentJourney, editedSteps, selectedLanes) {
-  const context = JSON.stringify({ ...currentJourney, steps: editedSteps }, null, 2)
-  const laneIds = selectedLanes.map((l) => l.id).join(', ')
+// ── Phase 3: Apply a targeted instruction to the current journey ───────────
+export async function applyInstruction(key, journey, instruction) {
+  const system = `You are a service design expert. Apply the user's instruction to the journey JSON and return ONLY the modified JSON.
+Rules:
+- Keep everything not mentioned in the instruction exactly as-is
+- Preserve the same schema and all lane_ids in actors
+- Return ONLY the raw JSON object, no markdown`
 
-  const system = `You are a service design expert. Rebuild a user journey from the provided edited draft and return ONLY valid JSON.
-The output must use the same schema as the input. Keep the same step structure.
-Active lanes: ${laneIds}
-Only populate data for active lanes. Return ONLY the raw JSON object, no markdown.`
-
-  const text = await callClaude(key, system, `Rebuild this journey with these edited steps:\n${context}`)
+  const text = await callClaude(key, system, `Instruction: ${instruction}\n\nCurrent journey:\n${JSON.stringify(journey, null, 2)}`)
   return parseJSON(text)
 }

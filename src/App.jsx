@@ -2,7 +2,7 @@ import { useState } from 'react'
 import LeftPanel from './components/LeftPanel'
 import JourneyCanvas from './components/canvas/JourneyCanvas'
 import IndexScreen from './screens/IndexScreen'
-import { extractJourney, rebuildJourney } from './lib/api'
+import { extractJourney, applyInstruction } from './lib/api'
 import { saveEntry } from './lib/storage'
 
 const LOADING_MSGS = ['Reading input...', 'Identifying steps...', 'Structuring lanes...', 'Building annotations...']
@@ -87,16 +87,16 @@ export default function App() {
     setJourney((j) => ({ ...j, steps }))
   }
 
-  // ── Phase 3: rebuild ─────────────────────────────────────────────────────
-  async function handleRebuild(editedSteps) {
+  // ── Phase 3: apply targeted instruction ──────────────────────────────────
+  async function handleApplyInstruction(instruction) {
     const key = sessionStorage.getItem('uj_key') || ''
     if (!key) return setError('API key missing.')
     startLoading()
     try {
-      const rebuilt = await rebuildJourney(key, journey, editedSteps, selectedLanes)
-      setJourney(rebuilt)
+      const updated = await applyInstruction(key, journey, instruction)
+      setJourney(updated)
     } catch (err) {
-      setError('Rebuild failed: ' + err.message)
+      setError('Failed: ' + err.message)
     } finally {
       stopLoading()
     }
@@ -114,6 +114,7 @@ export default function App() {
   // ── Phase 0: edit from view ───────────────────────────────────────────────
   function handleEditFromView() { setPhase(3) }
 
+  // ── Full reset (Start over) ───────────────────────────────────────────────
   function reset() {
     setPhase(1)
     setJourney(null)
@@ -177,14 +178,18 @@ export default function App() {
           onLanesConfirmed={handleLanesConfirmed}
           onLanesBack={() => setPhase(1)}
           onStepsChange={handleStepsChange}
-          onRebuild={handleRebuild}
+          onApplyInstruction={handleApplyInstruction}
           onStepsConfirmed={handleStepsConfirmed}
           onStepsBack={() => setPhase(2)}
           onMetadataSave={handleMetadataSave}
           onMetadataBack={() => setPhase(3)}
           onExportBack={() => setPhase(4)}
-          onReset={handleEditFromView}
-          onBackToIndex={() => setScreen('index')}
+          onEditFromView={handleEditFromView}
+          onReset={reset}
+          onBackToIndex={() => {
+            if (phase >= 3 && !window.confirm('You have unsaved changes. Leave anyway?')) return
+            setScreen('index')
+          }}
         />
 
         <div className="panel-right">
